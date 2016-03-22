@@ -114,6 +114,8 @@ validate_input(\%OPTIONS, 'port', 'port');
 
 my $hs;
 my $res;
+my ($start_sec, $start_microseconds) = gettimeofday();
+
 # Attempt Connection
 eval {
     local $SIG{ALRM} = sub { die 'TIMEOUT' };
@@ -124,7 +126,6 @@ eval {
 
     my $res = $hs->open_index(0, $OPTIONS{'database'}, $OPTIONS{'table'},
                               $OPTIONS{'index'}, $OPTIONS{'columns'});
-
     if ($hs->get_error() ne 'open_table' && $hs->get_error) {
         print "CRITICAL: Could not connect to HandlerSocket0\n";
         print $hs->get_error() if ($OPTIONS{'verbose'} > 2);
@@ -162,6 +163,17 @@ if ($check eq 'write_connect') {
 }
 
 eval "check_$check";
+
+
+################################################################################
+# Calc latency (microseconds)
+################################################################################
+
+sub calc_latency_millisecond{
+    my ($start_sec, $start_microseconds) = @_;
+    my ($end_sec, $end_microseconds) = gettimeofday();
+    return (($end_sec - $start_sec) * 1000000 + $end_microseconds - $start_microseconds) / 1000;
+}
 
 ################################################################################
 # Subroutines and helpers
@@ -285,7 +297,8 @@ sub check_read_exec {
         exit $ERRORS{'CRITICAL'};
     }
 
-    print "OK: Read\n";
+    my $latency_millisecond = calc_latency_millisecond($start_sec, $start_microseconds);
+    print "OK: Read : latency_millisecond=$latency_millisecond|latency_millisecond=$latency_millisecond\n";
     exit $ERRORS{'OK'};
 
 }
@@ -314,7 +327,8 @@ sub check_insert_exec {
         exit $ERRORS{'CRITICAL'};
     }
 
-    print "OK: insert\n";
+    my $latency_millisecond = calc_latency_millisecond($start_sec, $start_microseconds);
+    print "OK: insert : latency_millisecond=$latency_millisecond|latency_millisecond=$latency_millisecond\n";
     exit $ERRORS{'OK'};
 }
 
@@ -342,7 +356,8 @@ sub check_update_exec {
         exit $ERRORS{'CRITICAL'};
     }
 
-    print "OK: Update\n";
+    my $latency_millisecond = calc_latency_millisecond($start_sec, $start_microseconds);
+    print "OK: Update : latency_millisecond=$latency_millisecond|latency_millisecond=$latency_millisecond\n";
     exit $ERRORS{'OK'};
 }
 
@@ -376,7 +391,8 @@ sub check_delete_exec {
         exit $ERRORS{'CRITICAL'};
     }
 
-    print "OK: Delete\n";
+    my $latency_millisecond = calc_latency_millisecond($start_sec, $start_microseconds);
+    print "OK: Delete : latency_millisecond=$latency_millisecond|latency_millisecond=$latency_millisecond\n";
     exit $ERRORS{'OK'};
 }
 
